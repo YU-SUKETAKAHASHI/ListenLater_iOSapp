@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: contextcast_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contextcast}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-contextcast}
+      POSTGRES_DB: ${POSTGRES_DB:-contextcast}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: contextcast_api
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://contextcast:contextcast@postgres:5432/contextcast}
+      APP_ENV: ${APP_ENV:-local}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8000}
+      STORAGE_ROOT: ${STORAGE_ROOT:-/storage}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../apps/api:/app
+      - ../apps/worker:/worker_app
+      - ../storage:/storage
+    ports:
+      - "${API_PORT:-8000}:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ../apps/worker
+      dockerfile: Dockerfile
+    container_name: contextcast_worker
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      STORAGE_ROOT: ${STORAGE_ROOT:-/storage}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../apps/worker:/app
+      - ../storage:/storage
+    command: tail -f /dev/null
+
+volumes:
+  postgres_data:
