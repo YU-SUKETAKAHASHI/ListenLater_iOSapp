@@ -16,11 +16,37 @@ def test_worker_generation_and_media_serving(
     test_environment: dict[str, str],
     monkeypatch,
 ) -> None:
+    """
+    処理内容:
+        生成API実行後にworkerジョブを直接起動し、
+        音声/スクリプト生成・DB状態更新・media配信が一連で成立することを検証します。
+
+    Parameters:
+        api_client_committed (TestClient): コミット挙動を含むテストクライアント。
+        worker_flow_db (Session): workerフロー検証用のDBセッション。
+        test_environment (dict[str, str]): テスト環境設定情報。
+        monkeypatch: キュープロバイダ差し替えに利用するpytestフィクスチャ。
+
+    Returns:
+        None: アサーションによる検証のみを行います。
+    """
     from app.providers import queue as queue_module
     from jobs.generate_today import run_generate_today_job
 
     class _NoOpQueue:
         def enqueue_generate_today(self, *, user_id: str, episode_id: str, job_run_id: str) -> None:
+            """
+            処理内容:
+                テスト内でキュー実行を抑止するためのNo-Op実装です。
+
+            Parameters:
+                user_id (str): 対象ユーザーID。
+                episode_id (str): 対象Episode ID。
+                job_run_id (str): 対象JobRun ID。
+
+            Returns:
+                None: 何も実行しません。
+            """
             return None
 
     monkeypatch.setattr(queue_module, "get_queue_provider", lambda: _NoOpQueue())

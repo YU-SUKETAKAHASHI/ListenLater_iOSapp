@@ -15,6 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 def run_daily_episode_job(user_id: str | None = None) -> None:
+    """
+    処理内容:
+        ローカル検証向けにダミー音声生成パイプラインを1回実行します。
+        user_id 未指定時はローカルデモ用IDを使い、生成ファイル情報をログ出力します。
+
+    Parameters:
+        user_id (str | None): 実行対象ユーザーID。未指定時はデフォルト値を使用。
+
+    Returns:
+        None: ダミー音声生成とログ出力を副作用として実行します。
+    """
     settings = get_settings()
     storage_root = Path(settings.storage_root)
 
@@ -27,6 +38,17 @@ def run_daily_episode_job(user_id: str | None = None) -> None:
 
 
 def main() -> int:
+    """
+    処理内容:
+        worker CLI のエントリポイントとして引数を解析し、指定コマンドを実行します。
+        `run-daily-episode` または `run-generate-today` を受け付けます。
+
+    Parameters:
+        なし。
+
+    Returns:
+        int: 正常終了時は `0`、不明コマンドなどの異常系は `1`。
+    """
     settings = get_settings()
     configure_logging(settings.log_level)
 

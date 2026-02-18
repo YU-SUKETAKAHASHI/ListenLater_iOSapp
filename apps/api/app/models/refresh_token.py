@@ -11,6 +11,8 @@ from app.db.base import Base
 
 
 class RefreshToken(Base):
+    """リフレッシュトークンの管理情報を保持するモデル。"""
+
     __tablename__ = "refresh_tokens"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)

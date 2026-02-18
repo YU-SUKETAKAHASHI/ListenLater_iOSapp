@@ -12,6 +12,8 @@ from app.models.enums import EpisodeStatus
 
 
 class Episode(Base):
+    """日次生成されるEpisodeメタデータを保持するモデル。"""
+
     __tablename__ = "episodes"
     __table_args__ = (UniqueConstraint("user_id", "episode_date", name="uq_episodes_user_id_episode_date"),)
 

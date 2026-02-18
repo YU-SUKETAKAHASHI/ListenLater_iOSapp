@@ -9,7 +9,22 @@ from app.models.job_run import JobRun
 
 
 class LocalQueueProvider:
+    """ローカル環境でキュー処理を同期実行するプロバイダ。"""
+
     def enqueue_generate_today(self, *, user_id: str, episode_id: str, job_run_id: str) -> None:
+        """
+        処理内容:
+            workerモジュールを直接呼び出して当日Episode生成ジョブを実行します。
+            実行中に例外が発生した場合は `JobRun` を `failed` に更新し、例外を再送出します。
+
+        Parameters:
+            user_id (str): ジョブ対象ユーザーID。
+            episode_id (str): 生成対象Episode ID。
+            job_run_id (str): 更新対象JobRun ID。
+
+        Returns:
+            None: キュー投入（ローカルでは同期実行）処理のみを行います。
+        """
         worker_root = Path("/worker_app")
         if str(worker_root) not in sys.path:
             sys.path.insert(0, str(worker_root))

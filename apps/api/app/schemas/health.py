@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 
 class HealthResponse(BaseModel):
+    """ヘルスチェックAPIのレスポンススキーマ。"""
+
     status: Literal["ok"]
     service: str
     version: str

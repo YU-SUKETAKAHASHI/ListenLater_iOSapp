@@ -12,6 +12,8 @@ from app.models.enums import JobStatus, JobType
 
 
 class JobRun(Base):
+    """バックグラウンドジョブ実行履歴を記録するモデル。"""
+
     __tablename__ = "job_runs"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)

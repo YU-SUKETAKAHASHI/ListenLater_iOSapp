@@ -19,6 +19,16 @@ WORKER_APP_ROOT = "/worker_app"
 
 
 def _clear_settings_caches() -> None:
+    """
+    処理内容:
+        API/worker双方の設定キャッシュをクリアし、環境変数変更を即時反映できる状態にします。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: キャッシュクリアを副作用として実行します。
+    """
     if WORKER_APP_ROOT not in sys.path:
         sys.path.insert(0, WORKER_APP_ROOT)
 
@@ -30,6 +40,16 @@ def _clear_settings_caches() -> None:
 
 
 def _run_alembic_upgrade_head() -> None:
+    """
+    処理内容:
+        Alembicの最新リビジョンまでマイグレーションを適用します。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: DBスキーマ更新を副作用として実行します。
+    """
     subprocess.run(
         ["alembic", "upgrade", "head"],
         cwd=API_APP_ROOT,
@@ -38,6 +58,16 @@ def _run_alembic_upgrade_head() -> None:
 
 
 def _truncate_all_tables(database_url: str) -> None:
+    """
+    処理内容:
+        テスト対象テーブルをTRUNCATEし、IDカウンタを含めて初期状態へ戻します。
+
+    Parameters:
+        database_url (str): 接続対象テストDBのURL。
+
+    Returns:
+        None: テーブル初期化を副作用として実行します。
+    """
     engine = create_engine(database_url, future=True)
     with Session(engine) as session:
         session.execute(
@@ -52,6 +82,17 @@ def _truncate_all_tables(database_url: str) -> None:
 
 @pytest.fixture(scope="session", autouse=True)
 def test_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[dict[str, str], None, None]:
+    """
+    処理内容:
+        テスト全体で共有する環境変数・ストレージ・DB初期化をセットアップします。
+        テスト終了時には環境変数を元へ戻し、設定キャッシュを再クリアします。
+
+    Parameters:
+        tmp_path_factory (pytest.TempPathFactory): 一時ディレクトリ作成用ファクトリ。
+
+    Returns:
+        Generator[dict[str, str], None, None]: テスト用環境設定値をyieldするジェネレータ。
+    """
     storage_root = tmp_path_factory.mktemp("contextcast_test_storage")
 
     env_updates = {
@@ -87,6 +128,16 @@ def test_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[dict
 
 @pytest.fixture(scope="session")
 def db_engine(test_environment: dict[str, str]):
+    """
+    処理内容:
+        テストセッション全体で利用するSQLAlchemy Engineを生成して提供します。
+
+    Parameters:
+        test_environment (dict[str, str]): テスト環境設定情報。
+
+    Returns:
+        Generator: テスト用Engineをyieldし、終了時にdisposeするジェネレータ。
+    """
     engine = create_engine(test_environment["DATABASE_URL"], future=True)
     try:
         yield engine
@@ -96,6 +147,16 @@ def db_engine(test_environment: dict[str, str]):
 
 @pytest.fixture(scope="function")
 def db_connection(db_engine) -> Generator[Connection, None, None]:
+    """
+    処理内容:
+        各テスト関数向けにDB接続とトランザクションを開始し、終了時にロールバックします。
+
+    Parameters:
+        db_engine: テストセッションで共有するSQLAlchemy Engine。
+
+    Returns:
+        Generator[Connection, None, None]: ロールバック付き接続をyieldするジェネレータ。
+    """
     connection = db_engine.connect()
     transaction = connection.begin()
     try:
@@ -107,6 +168,16 @@ def db_connection(db_engine) -> Generator[Connection, None, None]:
 
 @pytest.fixture(scope="function")
 def db_session(db_connection: Connection) -> Generator[Session, None, None]:
+    """
+    処理内容:
+        テスト関数ごとにsavepointベースのSQLAlchemy Sessionを生成して提供します。
+
+    Parameters:
+        db_connection (Connection): テスト関数単位のDB接続。
+
+    Returns:
+        Generator[Session, None, None]: テスト用Sessionをyieldするジェネレータ。
+    """
     SessionLocal = sessionmaker(
         bind=db_connection,
         autocommit=False,
@@ -123,6 +194,17 @@ def db_session(db_connection: Connection) -> Generator[Session, None, None]:
 
 @pytest.fixture(scope="function")
 def api_client(db_connection: Connection, test_environment: dict[str, str]) -> Generator[TestClient, None, None]:
+    """
+    処理内容:
+        DB依存性をテスト用セッションに差し替えたFastAPI TestClientを提供します。
+
+    Parameters:
+        db_connection (Connection): テスト関数単位のDB接続。
+        test_environment (dict[str, str]): テスト環境設定情報。
+
+    Returns:
+        Generator[TestClient, None, None]: 依存性上書き済みTestClientをyieldするジェネレータ。
+    """
     from app.db import session as db_session_module
     from app.main import create_app
 
@@ -135,6 +217,16 @@ def api_client(db_connection: Connection, test_environment: dict[str, str]) -> G
     )
 
     def _override_get_db() -> Generator[Session, None, None]:
+        """
+        処理内容:
+            テスト用のSessionLocalからDBセッションを生成し、依存性オーバーライド向けに提供します。
+
+        Parameters:
+            なし。
+
+        Returns:
+            Generator[Session, None, None]: テスト用DBセッションをyieldするジェネレータ。
+        """
         db = SessionLocal()
         try:
             yield db
@@ -150,6 +242,16 @@ def api_client(db_connection: Connection, test_environment: dict[str, str]) -> G
 
 @pytest.fixture(scope="function")
 def api_client_committed(test_environment: dict[str, str]) -> Generator[TestClient, None, None]:
+    """
+    処理内容:
+        実運用に近いコミット挙動を持つFastAPI TestClientを提供します。
+
+    Parameters:
+        test_environment (dict[str, str]): テスト環境設定情報。
+
+    Returns:
+        Generator[TestClient, None, None]: 標準依存性のTestClientをyieldするジェネレータ。
+    """
     from app.main import create_app
 
     app = create_app()
@@ -159,6 +261,16 @@ def api_client_committed(test_environment: dict[str, str]) -> Generator[TestClie
 
 @pytest.fixture(scope="function")
 def auth_headers(api_client: TestClient) -> dict[str, str]:
+    """
+    処理内容:
+        モックログインを実行して有効なBearerトークン付きAuthorizationヘッダーを生成します。
+
+    Parameters:
+        api_client (TestClient): API呼び出しに使用するテストクライアント。
+
+    Returns:
+        dict[str, str]: 認証済みAuthorizationヘッダー。
+    """
     handle = f"tester_{uuid4().hex[:8]}"
     response = api_client.post("/auth/mock_login", json={"handle": handle})
     assert response.status_code == 200, response.text
@@ -167,6 +279,16 @@ def auth_headers(api_client: TestClient) -> dict[str, str]:
 
 
 def truncate_tables_for_worker_flow(session: Session) -> None:
+    """
+    処理内容:
+        workerフローテスト用に関連テーブルをTRUNCATEして初期化します。
+
+    Parameters:
+        session (Session): TRUNCATE実行に利用するSQLAlchemyセッション。
+
+    Returns:
+        None: テーブル初期化を副作用として実行します。
+    """
     session.execute(
         text(
             "TRUNCATE TABLE refresh_tokens, job_runs, episodes, x_accounts, users "
@@ -178,6 +300,16 @@ def truncate_tables_for_worker_flow(session: Session) -> None:
 
 @pytest.fixture(scope="function")
 def worker_flow_db(test_environment: dict[str, str]) -> Generator[Session, None, None]:
+    """
+    処理内容:
+        worker統合フローテスト向けに独立Sessionを提供し、前後でテーブルを初期化します。
+
+    Parameters:
+        test_environment (dict[str, str]): テスト環境設定情報。
+
+    Returns:
+        Generator[Session, None, None]: workerフロー検証用Sessionをyieldするジェネレータ。
+    """
     engine = create_engine(test_environment["DATABASE_URL"], future=True)
     SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
     session = SessionLocal()

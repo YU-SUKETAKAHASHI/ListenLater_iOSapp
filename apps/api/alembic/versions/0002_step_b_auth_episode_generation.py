@@ -19,6 +19,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    """
+    処理内容:
+        Step B向け拡張として refresh_tokens テーブルを追加し、
+        job_runs テーブルに duration_ms カラムを追加します。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: スキーマ変更を副作用として適用します。
+    """
     op.create_table(
         "refresh_tokens",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -38,6 +49,17 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    処理内容:
+        Step Bで追加した duration_ms カラムと refresh_tokens 関連オブジェクトを削除し、
+        直前リビジョンのスキーマへロールバックします。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: スキーマ変更の巻き戻しを副作用として適用します。
+    """
     op.drop_column("job_runs", "duration_ms")
     op.drop_index(op.f("ix_refresh_tokens_token_hash"), table_name="refresh_tokens")
     op.drop_index(op.f("ix_refresh_tokens_user_id"), table_name="refresh_tokens")

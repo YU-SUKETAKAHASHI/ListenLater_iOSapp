@@ -11,6 +11,8 @@ from app.db.base import Base
 
 
 class User(Base):
+    """アプリ利用者を表すユーザーモデル。"""
+
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)

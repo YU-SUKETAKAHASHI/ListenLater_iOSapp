@@ -20,6 +20,16 @@ config.set_main_option("sqlalchemy.url", settings.database_url)
 
 
 def run_migrations_offline() -> None:
+    """
+    処理内容:
+        DB接続を確立せず、URL情報のみでAlembicマイグレーションをオフライン実行します。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: マイグレーション実行を副作用として行います。
+    """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -33,6 +43,16 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    """
+    処理内容:
+        実際のDB接続を確立してAlembicマイグレーションをオンライン実行します。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: マイグレーション実行を副作用として行います。
+    """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

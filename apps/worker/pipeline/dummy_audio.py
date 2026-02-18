@@ -4,9 +4,17 @@ from pathlib import Path
 
 
 def generate_dummy_mp3(storage_root: Path, key: str) -> Path:
-    """Generate a deterministic dummy binary payload with .mp3 extension.
+    """
+    処理内容:
+        ダミーのMP3風バイナリファイルを指定パスへ生成します。
+        プロトタイプ段階でパイプライン疎通と保存先解決を検証するための処理です。
 
-    This is a prototype placeholder to validate the pipeline and storage path flow.
+    Parameters:
+        storage_root (Path): 保存先ルートディレクトリ。
+        key (str): ルート配下の保存キー（相対パス）。
+
+    Returns:
+        Path: 生成したダミー音声ファイルの実パス。
     """
     output_path = storage_root / key
     output_path.parent.mkdir(parents=True, exist_ok=True)

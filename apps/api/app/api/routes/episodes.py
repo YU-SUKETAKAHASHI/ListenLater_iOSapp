@@ -23,6 +23,18 @@ def get_today(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ) -> EpisodeTodayResponse:
+    """
+    処理内容:
+        認証済みユーザーの当日Episodeを取得します。
+        当日分が未作成の場合は新規作成し、最新状態をレスポンスとして返します。
+
+    Parameters:
+        current_user (User): 認証済みユーザー。
+        db (Session): Episode取得・作成に利用するSQLAlchemyセッション。
+
+    Returns:
+        EpisodeTodayResponse: 当日Episodeの識別子・状態・メタ情報を含むレスポンス。
+    """
     episode = get_or_create_today_episode(user_id=str(current_user.id), db=db)
     db.commit()
     db.refresh(episode)
@@ -40,6 +52,18 @@ def generate_today(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ) -> GenerateTodayResponse:
+    """
+    処理内容:
+        認証済みユーザーの当日Episode生成ジョブを開始し、キューへ投入します。
+        Episode状態更新とJobRun作成後にキュー投入を行い、ジョブ識別情報を返します。
+
+    Parameters:
+        current_user (User): 認証済みユーザー。
+        db (Session): Episode/JobRunの更新と永続化に利用するSQLAlchemyセッション。
+
+    Returns:
+        GenerateTodayResponse: 対象Episode ID、JobRun ID、現在状態を含むレスポンス。
+    """
     episode = get_or_create_today_episode(user_id=str(current_user.id), db=db)
     job = start_generate_today(user_id=str(current_user.id), episode=episode, db=db)
     db.commit()
@@ -65,6 +89,19 @@ def get_audio_url(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ) -> AudioUrlResponse:
+    """
+    処理内容:
+        指定Episodeの音声ファイル取得URLを返します。
+        所有者チェックと音声生成済みチェックを行い、条件を満たす場合のみURLを返却します。
+
+    Parameters:
+        episode_id (UUID): 音声URLを取得する対象Episode ID。
+        current_user (User): 認証済みユーザー（所有者検証に利用）。
+        db (Session): Episode参照に利用するSQLAlchemyセッション。
+
+    Returns:
+        AudioUrlResponse: Episode ID、音声URL、現在状態を含むレスポンス。
+    """
     episode = db.get(Episode, episode_id)
     if episode is None or str(episode.user_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="episode not found")

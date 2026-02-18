@@ -13,6 +13,19 @@ from pipeline.script_builder import build_script_payload
 
 
 def run_generate_today_job(*, user_id: str, episode_id: str, job_run_id: str) -> None:
+    """
+    処理内容:
+        当日Episode生成ジョブ本体を実行します。
+        DB上のジョブ/エピソード状態を更新しつつ、script.json と audio.mp3 を生成して保存します。
+
+    Parameters:
+        user_id (str): ジョブ対象ユーザーID。
+        episode_id (str): 生成対象Episode ID。
+        job_run_id (str): 実行状態を更新するJobRun ID。
+
+    Returns:
+        None: 生成処理とDB更新を副作用として実行します。
+    """
     settings = get_settings()
     engine = create_engine(settings.database_url, future=True)
     session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)

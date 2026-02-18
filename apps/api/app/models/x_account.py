@@ -11,6 +11,8 @@ from app.db.base import Base
 
 
 class XAccount(Base):
+    """ユーザーに紐づくXアカウント連携情報を保持するモデル。"""
+
     __tablename__ = "x_accounts"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)

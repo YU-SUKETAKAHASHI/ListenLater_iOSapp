@@ -19,6 +19,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    """
+    処理内容:
+        初期スキーマとして users / x_accounts / episodes / job_runs テーブルを作成し、
+        必要なインデックスと制約を定義します。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: スキーマ変更を副作用として適用します。
+    """
     op.create_table(
         "users",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -82,6 +93,17 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    処理内容:
+        初期スキーマで作成したテーブル・インデックスを逆順で削除し、
+        `upgrade` 前の状態へロールバックします。
+
+    Parameters:
+        なし。
+
+    Returns:
+        None: スキーマ変更の巻き戻しを副作用として適用します。
+    """
     op.drop_table("job_runs")
     op.drop_index(op.f("ix_episodes_user_id"), table_name="episodes")
     op.drop_index(op.f("ix_episodes_episode_date"), table_name="episodes")

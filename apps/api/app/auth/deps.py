@@ -15,6 +15,18 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db_session),
 ) -> User:
+    """
+    処理内容:
+        アクセストークンを検証してユーザーIDを抽出し、DBから対応ユーザーを取得します。
+        不正トークンやユーザー未存在時は401例外を送出します。
+
+    Parameters:
+        token (str): OAuth2依存性から注入されるBearerアクセストークン。
+        db (Session): ユーザー照会に利用するSQLAlchemyセッション。
+
+    Returns:
+        User: 認証済みのユーザーエンティティ。
+    """
     try:
         payload = decode_token(token, expected_typ="access")
         user_id = payload.get("sub")
