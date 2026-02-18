@@ -8,8 +8,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from config import get_settings
-from pipeline.dummy_audio import generate_dummy_mp3
-from pipeline.script_builder import build_script_payload
+from pipeline.podcast_recoder import generate_dummy_mp3
+from pipeline.podcast_writer import build_dummy_script_payload
 
 
 def run_generate_today_job(*, user_id: str, episode_id: str, job_run_id: str) -> None:
@@ -57,7 +57,7 @@ def run_generate_today_job(*, user_id: str, episode_id: str, job_run_id: str) ->
         script_key = f"episodes/{episode_id}/script.json"
         audio_key = f"episodes/{episode_id}/audio.mp3"
 
-        payload = build_script_payload(user_id=user_id, episode_id=episode_id)
+        payload = build_dummy_script_payload(user_id=user_id, episode_id=episode_id)
         script_path = Path(settings.storage_root) / script_key
         script_path.parent.mkdir(parents=True, exist_ok=True)
         script_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")

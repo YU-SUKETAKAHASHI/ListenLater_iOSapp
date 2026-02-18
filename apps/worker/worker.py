@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from config import get_settings
 from jobs.generate_today import run_generate_today_job
-from pipeline.dummy_audio import generate_dummy_mp3
+from pipeline.podcast_recoder import generate_dummy_mp3
 from worker_logging import configure_logging
 
 logger = logging.getLogger(__name__)

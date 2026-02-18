@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 
-def build_script_payload(*, user_id: str, episode_id: str) -> dict:
+def build_dummy_script_payload(*, user_id: str, episode_id: str) -> dict:
     """
     処理内容:
         ダミーのスクリプトJSONペイロードを生成します。
