@@ -28,11 +28,11 @@ def run_generate_today_job(*, user_id: str, episode_id: str, job_run_id: str) ->
     """
     settings = get_settings()
     engine = create_engine(settings.database_url, future=True)
-    session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
+    SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
 
     start_at = datetime.now(timezone.utc)
 
-    with session_factory() as db:
+    with SessionLocal() as db:
         import sys
 
         api_root = Path("/app")
