@@ -9,7 +9,7 @@ from app.auth.deps import get_current_user
 from app.db.session import get_db_session
 from app.models.episode import Episode
 from app.models.user import User
-from app.providers.queue.local import LocalQueueProvider
+from app.providers import queue as queue_provider
 from app.providers.storage.local import LocalStorageProvider
 from app.schemas.episodes import AudioUrlResponse, EpisodeTodayResponse, GenerateTodayResponse
 from app.services.episode_service import get_or_create_today_episode
@@ -44,7 +44,7 @@ def generate_today(
     job = start_generate_today(user_id=str(current_user.id), episode=episode, db=db)
     db.commit()
 
-    queue = LocalQueueProvider()
+    queue = queue_provider.get_queue_provider()
     try:
         queue.enqueue_generate_today(user_id=str(current_user.id), episode_id=str(episode.id), job_run_id=str(job.id))
     except Exception as exc:  # noqa: BLE001

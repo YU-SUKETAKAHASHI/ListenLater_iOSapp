@@ -68,6 +68,25 @@ curl http://localhost:8000/health
 - `make migrate` - Alembicマイグレーション適用
 - `make seed` - 最小サンプルデータ投入
 - `make worker-run` - ダミーワーカーパイプラインを1回実行
+- `make test` - docker-compose上でAPI/Workerのpytestを実行
+- `make test-api` - API系テストのみ実行
+- `make test-worker` - worker + media統合テストのみ実行
+
+## テスト実行（docker-compose）
+
+テストは **apiコンテナ内で実行** されます。pytest から DB 作成は行わず、`POSTGRES_DB=contextcast_test` を使って compose 側で test DB を用意する前提です。
+
+```bash
+cd contextcast
+cp .env.test.example .env.test
+make up
+make migrate
+make test
+```
+
+補足:
+- テスト中は `STORAGE_ROOT` を一時ディレクトリへ差し替えて隔離します。
+- DB隔離は原則 transaction + rollback、worker統合テストのみ局所的にTRUNCATEを使います。
 
 ## 環境変数
 
