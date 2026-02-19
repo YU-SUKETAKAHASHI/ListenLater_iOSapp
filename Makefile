@@ -36,16 +36,16 @@ test:
 	@if [ ! -f $(TEST_ENV_FILE) ]; then echo "Missing $(TEST_ENV_FILE). Create it from .env.test.example"; exit 1; fi
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) up -d --build postgres api worker
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api alembic upgrade head
-	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest -q tests
+	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest tests
 
 test-api:
 	@if [ ! -f $(TEST_ENV_FILE) ]; then echo "Missing $(TEST_ENV_FILE). Create it from .env.test.example"; exit 1; fi
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) up -d --build postgres api worker
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api alembic upgrade head
-	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest -q tests/test_health.py tests/test_auth.py tests/test_episodes.py
+	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest tests/test_health.py tests/test_auth.py tests/test_episodes.py
 
 test-worker:
 	@if [ ! -f $(TEST_ENV_FILE) ]; then echo "Missing $(TEST_ENV_FILE). Create it from .env.test.example"; exit 1; fi
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) up -d --build postgres api worker
 	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api alembic upgrade head
-	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest -q tests/test_worker_media_flow.py
+	docker compose -f $(COMPOSE_FILE) --env-file $(TEST_ENV_FILE) run --rm api pytest tests/test_worker_media_flow.py
